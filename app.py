@@ -24,10 +24,10 @@ else:
     lessons = st.Page("views/lessons.py", title="Lessons", icon="📅")
     customers = st.Page("views/customers.py", title="Customers", icon="👤")
     payments = st.Page("views/payments.py", title="Payments", icon="💳")
-    reports = st.Page("views/reports.py", title="Reports & Views", icon="📊")
-    views = st.Page("views/views.py", title="Reports & Views", icon="📊")
+    reports = st.Page("views/reports.py", title="Reports", icon="📊")
+    views = st.Page("views/views.py", title="Reports", icon="📊")
 
-    pg = st.navigation(pages=[customers,lessons,  payments, reports, views])
+    pg = st.navigation(pages=[customers, lessons,  payments, reports, views])
     pg.run()
 
 

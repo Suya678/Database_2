@@ -42,7 +42,7 @@ def render_add_form(status_options):
 
         if submitted:
             try:
-                db.rpc("add_customer_and_address", {
+                db.rpc("add_customer_with_address", {
                     "p_first_name": first_name,
                     "p_last_name": last_name,
                     "p_email": email,
@@ -126,8 +126,6 @@ def render_edit_form(selected, status_options):
                 st.error(f"Update failed: {e}")
 
 
-# --- MAIN PAGE ---
-
 df = load_customer_data()
 status_options = load_status_options()
 
@@ -139,23 +137,18 @@ if df.empty:
 else:
     st.subheader("All Customers")
 
-    row_height = 35
-    header_height = 38
-    min_height = 400
-    max_height = 600
-    table_height = min(max(len(df) * row_height + header_height, min_height), max_height)
+
 
     event = st.dataframe(
         df,
         width="stretch",
-        height=table_height,
         hide_index=True,
         on_select="rerun",
-        selection_mode="single-row",
+        selection_mode="single-row", # This will create a dummy column to select a single row
     )
 
     selected_rows = event.selection.rows
-
+    # This will be async, if a row is selected
     if selected_rows:
         selected = df.iloc[selected_rows[0]]
         render_edit_form(selected, status_options)
