@@ -1,5 +1,6 @@
 DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
+
 --- Tables With No Foreign KEYS ---
 CREATE TABLE "Customer_Status" (
   "customer_status_code"        varchar(10) PRIMARY KEY,
@@ -70,7 +71,7 @@ CREATE TABLE "Customers" (
   "date_of_birth"            date NOT NULL,
   "first_name"               varchar(100) NOT NULL,
   "last_name"                varchar(100) NOT NULL,
-  "amount_outstanding"       decimal(10,2) DEFAULT 0.00 CHECK (amount_outstanding >=0),
+  "amount_outstanding"       decimal(10,2) DEFAULT 0.00,
   "email_address"            varchar(150) NOT NULL,
   "phone_number"             varchar(30),
   "cell_mobile_phone_number" varchar(30),
@@ -138,7 +139,7 @@ CREATE TABLE "Customer_Payments" (
   "customer_id"           int NOT NULL, 
   "datetime_payment"      timestamptz NOT NULL,
   "payment_method_code"   varchar(10) NOT NULL, 
-  "amount_payment"        decimal(10,2) NOT NULL,
+  "amount_payment"        decimal(10,2) NOT NULL CHECK (amount_payment <> 0),
   "other_payment_details" text,
 
   PRIMARY KEY ("customer_id", "datetime_payment"),

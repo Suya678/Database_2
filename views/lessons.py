@@ -7,7 +7,7 @@ from utils.login import check_session
 
 # --- DATA LOADING ---
 def load_lessons_data():
-    response = db.table("Lesson_Details").select("*").execute()
+    response = db.table("lesson_details").select("*").execute()
     return pd.DataFrame(response.data)
 
 def load_active_customers():

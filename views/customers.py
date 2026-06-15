@@ -9,7 +9,7 @@ from utils.login import check_session
 
 # --- DATA LOADING ---
 def load_customer_data():
-    response = db.table("Customer_Details").select("*").execute()
+    response = db.table("customer_details").select("*").execute()
     return pd.DataFrame(response.data)
 
 def load_status_options():
