@@ -4,8 +4,6 @@ from utils.login import get_current_user, show_login_form
 import streamlit as st
 from utils.db import db
 
-
-
 # show a one-time toast/message set elsewhere in the app
 toast = st.session_state.pop("toast", None)
 if toast:
@@ -42,7 +40,7 @@ else:
     lessons = st.Page("views/lessons.py", title="Lessons", icon="📅")
     customers = st.Page("views/customers.py", title="Customers", icon="👤")
     payments = st.Page("views/payments.py", title="Payments", icon="💳")
-    reports = st.Page("views/reports.py", title="Reports", icon="📊")
+    reports = st.Page("views/reports.py", title="Views", icon="📊")
     views = st.Page("views/views.py", title="Reports", icon="📊")
 
     pg = st.navigation(pages=[customers, lessons,  payments, reports, views])
