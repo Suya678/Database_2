@@ -1,12 +1,12 @@
 import streamlit as st
 import pandas as pd
+from datetime import date
 from utils.db import db
 from utils.login import check_session
 
 
 if check_session() is False:
     st.rerun()
-
 
 # --- DATA LOADING ---
 def load_customer_data():
@@ -17,53 +17,85 @@ def load_status_options():
     response = db.table("Customer_Status").select("customer_status_code").execute()
     return [row["customer_status_code"] for row in response.data]
 
+def get_validation_errors(first_name, last_name, phone, email, line_1, city, state_province, country, zip_postcode, dob, status):
+    errors = []
+    
+    fields = [
+        (first_name, "First Name"),
+        (last_name, "Last Name"),
+        (phone, "Phone"),
+        (email, "Email"),
+        (line_1, "Address Line 1"),
+        (city, "City"),
+        (state_province, "State/Province"),
+        (country, "Country"),
+        (zip_postcode, "Zip/Postcode"),
+        (dob, "Date of Birth"),
+        (status, "Status"),
+    ]
+    if dob and dob > date.today():
+        errors.append("Date of Birth cannot be in the future.")
+
+    for value, label in fields:
+        if not value or (isinstance(value, str) and not value.strip()):
+            errors.append(f"{label} is required")
+    return errors
 
 # --- ADD FORM ---
 def render_add_form(status_options):
     with st.form("add_customer_form", clear_on_submit=True):
-        first_name = st.text_input("First Name")
-        last_name = st.text_input("Last Name")
-        email = st.text_input("Email")
-        phone = st.text_input("Phone")
-        mobile = st.text_input("Mobile")
-        status = st.selectbox("Status", options=status_options)
-        dob = st.date_input("Date of Birth")
-        notes = st.text_area("Notes")
+        st.markdown("**Fields marked with * are required**")
 
+        first_name = st.text_input("First Name *")
+        last_name = st.text_input("Last Name *")
+        email = st.text_input("Email *")
+        phone = st.text_input("Phone *")
+        mobile = st.text_input("Mobile")
+        dob = st.date_input("Date of Birth *", value=pd.to_datetime("2000-01-01").date())
+        notes = st.text_area("Notes")
+        status = st.selectbox("Status *", options=status_options)
         st.markdown("**Address**")
-        line_1 = st.text_input("Line 1")
+        line_1 = st.text_input("Line 1 *")
         line_2 = st.text_input("Line 2")
-        city = st.text_input("City")
-        state_province = st.text_input("State/Province")
-        country = st.text_input("Country")
-        zip_postcode = st.text_input("Zip/Postcode")
+        line_3 = st.text_input("Line 3")
+        city = st.text_input("City *")
+        state_province = st.text_input("State/Province *")
+        country = st.text_input("Country *")
+        zip_postcode = st.text_input("Zip/Postcode *")
 
         submitted = st.form_submit_button("Add Customer")
 
         if submitted:
-            try:
-                db.rpc("add_customer_with_address", {
-                    "p_first_name": first_name,
-                    "p_last_name": last_name,
-                    "p_email": email,
-                    "p_phone": phone,
-                    "p_mobile": mobile,
-                    "p_status": status,
-                    "p_dob": str(dob),
-                    "p_notes": notes,
-                    "p_line_1": line_1,
-                    "p_line_2": line_2,
-                    "p_city": city,
-                    "p_state_province": state_province,
-                    "p_country": country,
-                    "p_zip_postcode": zip_postcode,
-                }).execute()
+            errors = get_validation_errors(first_name, last_name, phone, email, line_1, city, state_province, country, zip_postcode, dob, status)
+            
+            for err in errors:
+                st.error(err)
+            
+            if not any(errors):
+                try:
+                    db.rpc("add_customer_with_address", {
+                        "p_first_name": first_name,
+                        "p_last_name": last_name,
+                        "p_email": email,
+                        "p_phone": phone,
+                        "p_mobile": mobile,
+                        "p_status": status,
+                        "p_dob": str(dob),
+                        "p_notes": notes,
+                        "p_line_1": line_1,
+                        "p_line_2": line_2,
+                        "p_line_3": line_3,
+                        "p_city": city,
+                        "p_state_province": state_province,
+                        "p_country": country,
+                        "p_zip_postcode": zip_postcode,
+                    }).execute()
 
-                st.success("Customer added!")
-                st.rerun()
+                    st.session_state["toast"] = {"msg": "Customer added!", "kind": "success"}
+                    st.rerun()
 
-            except Exception as e:
-                st.error(f"Add failed: {e}")
+                except Exception as e:
+                    st.error(f"Add failed: {e}")
 
 
 # --- EDIT / DELETE FORM ---
@@ -74,56 +106,77 @@ def render_edit_form(selected, status_options):
     st.subheader(f"Edit Customer #{customer_id}")
 
     with st.form("edit_customer_form"):
-        first_name = st.text_input("First Name", value=selected["first_name"])
-        last_name = st.text_input("Last Name", value=selected["last_name"])
-        email = st.text_input("Email", value=selected["email_address"])
-        phone = st.text_input("Phone", value=selected["phone_number"])
+        st.markdown("**Fields marked with * are required**")
+        first_name = st.text_input("First Name *", value=selected["first_name"])
+        last_name = st.text_input("Last Name *", value=selected["last_name"])
+        email = st.text_input("Email *", value=selected["email_address"])
+        phone = st.text_input("Phone *", value=selected["phone_number"])
         mobile = st.text_input("Mobile", value=selected["cell_mobile_phone_number"])
         status = st.selectbox(
-            "Status",
-            options=status_options,
-            index=status_options.index(selected["customer_status_code"])
-            if selected["customer_status_code"] in status_options else 0,
+        "Status *",
+        options=status_options,
+        index=status_options.index(selected["customer_status_code"])
         )
-        dob = st.date_input("Date of Birth", value=pd.to_datetime(selected["date_of_birth"]).date())
+
+        dob = st.date_input("Date of Birth *", value=pd.to_datetime(selected["date_of_birth"]).date())
         notes = st.text_area("Notes", value=selected["other_customer_details"] or "")
 
         st.markdown("**Address**")
-        line_1 = st.text_input("Line 1", value=selected["line_1"] or "")
+        line_1 = st.text_input("Line 1 *", value=selected["line_1"] or "")
         line_2 = st.text_input("Line 2", value=selected["line_2"] or "")
-        city = st.text_input("City", value=selected["city"] or "")
-        state_province = st.text_input("State/Province", value=selected["state_province"] or "")
-        country = st.text_input("Country", value=selected["country"] or "")
+        line_3 = st.text_input("Line 3", value=selected["line_3"] or "")
+        city = st.text_input("City *", value=selected["city"] or "")
+        state_province = st.text_input("State/Province *", value=selected["state_province"] or "")
+        country = st.text_input("Country *", value=selected["country"] or "")
         zip_postcode = st.text_input("Zip/Postcode", value=selected["zip_postcode"] or "")
 
         submitted = st.form_submit_button("Save Changes")
 
         if submitted:
-            try:
-                db.rpc("update_customer_and_address", {
-                    "p_customer_id": customer_id,
-                    "p_first_name": first_name,
-                    "p_last_name": last_name,
-                    "p_email": email,
-                    "p_phone": phone,
-                    "p_mobile": mobile,
-                    "p_status": status,
-                    "p_dob": str(dob),
-                    "p_notes": notes,
-                    "p_address_id": address_id,
-                    "p_line_1": line_1,
-                    "p_line_2": line_2,
-                    "p_city": city,
-                    "p_state_province": state_province,
-                    "p_country": country,
-                    "p_zip_postcode": zip_postcode,
-                }).execute()
+            errors = get_validation_errors(first_name, last_name, phone, email, line_1, city, state_province, country, zip_postcode, dob, status)
 
-                st.success("Customer updated!")
-                st.rerun()
+            for err in errors:
+                if err:
+                    st.error(err)
+                    
+            if not any(errors):
+                try:
+                    db.rpc("update_customer_and_address", {
+                        "p_customer_id": customer_id,
+                        "p_first_name": first_name,
+                        "p_last_name": last_name,
+                        "p_email": email,
+                        "p_phone": phone,
+                        "p_mobile": mobile,
+                        "p_status": status,
+                        "p_dob": str(dob),
+                        "p_notes": notes,
+                        "p_address_id": address_id,
+                        "p_line_1": line_1,
+                        "p_line_2": line_2,
+                        "p_line_3": line_3,
+                        "p_city": city,
+                        "p_state_province": state_province,
+                        "p_country": country,
+                        "p_zip_postcode": zip_postcode,
+                    }).execute()
 
-            except Exception as e:
-                st.error(f"Update failed: {e}")
+                    st.session_state["toast"] = {"msg": "Customer updated!", "kind": "success"}
+                    st.rerun()
+
+                except Exception as e:
+                    st.error(f"Update failed: {e}")
+
+    # --- DELETE BUTTON (outside form) ---
+    st.markdown("---")
+    confirm = st.checkbox("Delete this customer", key=f"confirm_delete_{customer_id}")
+    if st.button("🗑️ Delete", key=f"delete_{customer_id}", disabled=not confirm):
+        try:
+            db.table("Customers").delete().eq("customer_id", customer_id).execute()
+            st.session_state["toast"] = {"msg": "Customer deleted!", "kind": "success"}
+            st.rerun()
+        except Exception as e:
+            st.error(f"Delete failed: {e}")
 
 
 df = load_customer_data()
@@ -137,14 +190,12 @@ if df.empty:
 else:
     st.subheader("All Customers")
 
-
-
     event = st.dataframe(
         df,
         width="stretch",
         hide_index=True,
         on_select="rerun",
-        selection_mode="single-row", # This will create a dummy column to select a single row
+        selection_mode="single-row", # This will create a dummy column to select a single row,
     )
 
     selected_rows = event.selection.rows

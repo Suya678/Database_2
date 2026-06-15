@@ -4,6 +4,24 @@ from utils.login import get_current_user, show_login_form
 import streamlit as st
 from utils.db import db
 
+
+
+# show a one-time toast/message set elsewhere in the app
+toast = st.session_state.pop("toast", None)
+if toast:
+    kind = toast.get("kind", "success")
+    msg = toast.get("msg", "")
+    if kind == "success":
+        st.success(msg)
+    elif kind == "info":
+        st.info(msg)
+    elif kind == "warning":
+        st.warning(msg)
+    elif kind == "error":
+        st.error(msg)
+    else:
+        st.write(msg)
+
 st.set_page_config(page_title="Admin App", layout="wide")
 # Check if user is logged in
 user = get_current_user()
