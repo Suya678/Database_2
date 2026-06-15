@@ -4,8 +4,6 @@ from datetime import date
 from utils.db import db
 from utils.login import check_session
 
-if check_session() is False:
-    st.rerun()
 
 # --- DATA LOADING ---
 def load_lessons_data():

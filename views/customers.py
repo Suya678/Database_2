@@ -5,8 +5,7 @@ from utils.db import db
 from utils.login import check_session
 
 
-if check_session() is False:
-    st.rerun()
+
 
 # --- DATA LOADING ---
 def load_customer_data():
@@ -138,7 +137,7 @@ def render_edit_form(selected, status_options):
             for err in errors:
                 if err:
                     st.error(err)
-                    
+
             if not any(errors):
                 try:
                     db.rpc("update_customer_and_address", {
