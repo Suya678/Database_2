@@ -43,7 +43,7 @@ else:
     # reports = st.Page("views/reports.py", title="Views", icon="📊")
     # views = st.Page("views/views.py", title="Reports", icon="📊")
 
-    pg = st.navigation(pages=[customers, lessons,  payments, reports, views])
+    pg = st.navigation(pages=[customers, lessons,  payments])
     pg.run()
 
 
