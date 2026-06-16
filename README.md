@@ -1,5 +1,7 @@
 # Driving School Admin Portal
 
+[App Link](https://24wf2b9rzcye9qyxxy88mx.streamlit.app)
+
 A Streamlit admin app for managing a driving school — customers, lesson bookings,
 payments, and reporting views. Data is stored in [Supabase](https://supabase.com)
 (Postgres).
